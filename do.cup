@@ -1,15 +1,11 @@
-// Analisador Sintático para a linguagem DO
+// NOME DO ARQUIVO: do.cup
 import java_cup.runtime.*;
-
-// A diretiva 'parser class' foi REMOVIDA para evitar o erro.
-// A classe gerada se chamará 'parser' por padrão.
+parser class DoParser;
 parser code {:
     public static void main(String[] args) throws Exception {
-        // Usamos o nome padrão 'parser'
-        new parser(new ExemploLexer(new java.io.FileReader("entrada.txt"))).parse();
+        new DoParser(new DoLexer(new java.io.FileReader(args[0]))).parse();
     }
 :};
-
 // Terminais
 terminal DO, OUT, COLCH_ESQ, COLCH_DIR, PTVIRG, IGUAL, MENOR, MAIS_MAIS, PARENT_ESQ, PARENT_DIR;
 terminal String ID;
@@ -17,9 +13,8 @@ terminal Integer INTEIRO;
 // Não-Terminais
 non terminal String programa, atribuicao, condicao, incremento, comando_out, expressao_do;
 start with programa;
-
 programa ::= DO COLCH_ESQ atribuicao:i PTVIRG condicao:c PTVIRG incremento:inc COLCH_DIR comando_out:b
-             {: RESULT = "for (" + i + "; " + c + "; " + inc + ") {\n    " + b + "\n}"; System.out.println(RESULT); :};
+             {: RESULT = "for (" + i + "; " + c + "; " + inc + ") {\n    " + b + "\n}"; :};
 atribuicao  ::= ID:i IGUAL expressao_do:e {: RESULT = "int " + i + " = " + e; :};
 condicao    ::= expressao_do:e1 MENOR expressao_do:e2 {: RESULT = e1 + " < " + e2; :};
 incremento  ::= ID:i MAIS_MAIS           {: RESULT = i + "++"; :};

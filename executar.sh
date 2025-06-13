@@ -1,22 +1,23 @@
 #!/bin/bash
 
-# Remover arquivos:
-rm -rf *.class *.java~
-rm -rf jcup.jar MeuParser.java sym.java 
-rm -rf jflex.jar MeuScanner.java   
+# Define o Classpath para o Java encontrar os JARs
+CP=".:jflex.jar:jcup.jar"
 
-# Baixar JFlex e JCup:
-wget https://repo1.maven.org/maven2/de/jflex/jflex/1.8.2/jflex-1.8.2.jar -O jflex.jar
-wget https://repo1.maven.org/maven2/com/github/vbmacher/java-cup/11b-20160615/java-cup-11b-20160615.jar -O jcup.jar
+echo ">> PASSO 1: LIMPANDO arquivos antigos..."
+# Remove todos os arquivos .java e .class para garantir um ambiente limpo
+rm -f *.java *.class
 
-# Gerar o Analisador Léxico:
-java -cp jflex.jar:jcup.jar jflex.Main exemplo.flex
+echo ">> PASSO 2: GERANDO ExemploLexer.java..."
+java -cp "$CP" jflex.Main exemplo.flex
 
-# Gerar o Analisador Sintático:
-java -cp jcup.jar java_cup.Main -parser MeuParser exemplo.cup
+echo ">> PASSO 3: GERANDO parser.java e sym.java..."
+# O JCup vai gerar 'parser.java' por padrão
+java -cp "$CP" java_cup.Main exemplo.cup
 
-# Compilar as classes .java:
-javac -cp jcup.jar *.java
+echo ">> PASSO 4: COMPILANDO apenas os 3 arquivos necessários..."
+# Compilamos 'parser.java' (o nome padrão)
+javac -cp "$CP" parser.java ExemploLexer.java sym.java
 
-# Executar a classe principal:
-java -cp .:jcup.jar MeuParser ./entrada.txt
+echo ">> PASSO 5: EXECUTANDO..."
+# Executamos a classe 'parser'
+java -cp "$CP" parser entrada.txt

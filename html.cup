@@ -1,0 +1,22 @@
+// NOME DO ARQUIVO: html.cup
+import java_cup.runtime.*;
+parser class HtmlParser;
+parser code {:
+    public static void main(String[] args) throws Exception {
+        new HtmlParser(new HtmlLexer(new java.io.FileReader(args[0]))).parse();
+    }
+:};
+// Terminais
+terminal ABRE, FECHA, FECHA_ABRE, AUTO_FECHA, IGUAL;
+terminal String ID, STRING, TEXTO;
+// Não-Terminais
+non terminal elemento_html, lista_atributos, atributo, conteudo;
+start with elemento_html;
+elemento_html ::= ABRE ID:t lista_atributos:a FECHA conteudo:c FECHA_ABRE ID:t2 FECHA
+                  {: System.out.println("TAG: <" + t + ">\n  Atributos: " + (a == null ? "Nenhum" : "\n" + a) + "  Conteúdo: '" + c + "'\nFECHAMENTO: </" + t2 + ">"); :}
+                | ABRE ID:t lista_atributos:a AUTO_FECHA
+                  {: System.out.println("TAG DE AUTO-FECHAMENTO: <" + t + "/>\n  Atributos: " + (a == null ? "Nenhum" : "\n" + a)); :}
+                ;
+lista_atributos ::= lista_atributos:l atributo:a {: RESULT = l; :} | atributo:a {: :};
+atributo ::= ID:n IGUAL STRING:v {: System.out.print("    - " + n + " = \"" + v + "\"\n"); :};
+conteudo ::= TEXTO:t {: :} | {: :};
