@@ -1,0 +1,33 @@
+parser code {:
+    import java_cup.runtime.Symbol;
+    public static void main(String[] args) throws Exception {
+        HtmlLexer lexer = new HtmlLexer(new java.io.InputStreamReader(System.in));
+        new HtmlParser(lexer).parse();
+    }
+:};
+
+terminal LT, LTSLASH, GT, SLASHGT, EQ;
+terminal String ID, ATTRVAL, TEXT;
+
+non terminal html, tag, content, attrs, attrlist, attr;
+
+html ::= tag html
+       | content html
+       | /* vazio */ ;
+
+content ::= TEXT:t {: System.out.println("Conteúdo: " + t); :};
+
+tag ::= LT ID:id1 attrs GT html LTSLASH ID:id2 GT
+        {: 
+            System.out.println("Tag aberta: <" + id1 + ">");
+            System.out.println("Tag fechada: </" + id2 + ">");
+        :}
+     | LT ID:id attrs SLASHGT
+        {: System.out.println("Tag auto-fechada: <" + id + " />"); :};
+
+attrs ::= attrlist | /* vazio */ ;
+
+attrlist ::= attr attrlist | attr ;
+
+attr ::= ID:id EQ ATTRVAL:val
+         {: System.out.println("  Atributo: " + id + " = " + val); :};
