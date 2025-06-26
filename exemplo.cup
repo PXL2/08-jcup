@@ -1,27 +1,61 @@
-// Analisador Sintático para a linguagem DO
 import java_cup.runtime.*;
 
-// A diretiva 'parser class' foi REMOVIDA para evitar o erro.
-// A classe gerada se chamará 'parser' por padrão.
+/* 
+=> parser code {: ... :}:
+   Permite incluir um método main() diretamente dentro da 
+   classe do analisador sintático, dispensando a criação de 
+   uma classe principal (Main) com o método main().
+
+   O próprio analisador sintático será responsável por iniciar 
+   a execução.
+*/
 parser code {:
-    public static void main(String[] args) throws Exception {
-        // Usamos o nome padrão 'parser'
-        new parser(new ExemploLexer(new java.io.FileReader("entrada.txt"))).parse();
-    }
-:};
+  public static void main(String[] args) throws Exception {
+    Compilador compilador = new Compilador();
+    compilador.compilar(args[0]);
+  }
+:}
 
-// Terminais
-terminal DO, OUT, COLCH_ESQ, COLCH_DIR, PTVIRG, IGUAL, MENOR, MAIS_MAIS, PARENT_ESQ, PARENT_DIR;
-terminal String ID;
 terminal Integer INTEIRO;
-// Não-Terminais
-non terminal String programa, atribuicao, condicao, incremento, comando_out, expressao_do;
-start with programa;
+terminal MAIS, MENOS, MULTP, DIVIS, RESTO, POTEN, MENOSUNARIO, PTVIRG, PARENTESQ, PARENTDIR;
 
-programa ::= DO COLCH_ESQ atribuicao:i PTVIRG condicao:c PTVIRG incremento:inc COLCH_DIR comando_out:b
-             {: RESULT = "for (" + i + "; " + c + "; " + inc + ") {\n    " + b + "\n}"; System.out.println(RESULT); :};
-atribuicao  ::= ID:i IGUAL expressao_do:e {: RESULT = "int " + i + " = " + e; :};
-condicao    ::= expressao_do:e1 MENOR expressao_do:e2 {: RESULT = e1 + " < " + e2; :};
-incremento  ::= ID:i MAIS_MAIS           {: RESULT = i + "++"; :};
-comando_out ::= OUT PARENT_ESQ expressao_do:e PARENT_DIR {: RESULT = "System.out.println(" + e + ");"; :};
-expressao_do::= ID:i {: RESULT = i; :} | INTEIRO:n {: RESULT = n.toString(); :};
+non terminal inicio;
+non terminal Integer expr;
+
+precedence left MAIS, MENOS, MULTP, DIVIS, RESTO;
+precedence right MENOSUNARIO, POTEN; // Menos unário com maior precedência, associatividade à direita.
+
+start with inicio;
+
+inicio ::= expr:e PTVIRG {: System.out.println(e); :}
+         ;
+
+expr ::= expr:a MAIS expr:b             {: RESULT = a.intValue() + b.intValue(); :}
+       | expr:a MENOS expr:b            {: RESULT = a.intValue() - b.intValue(); :}
+       | MENOS expr:a                   {: RESULT = -a; :} %prec MENOSUNARIO  
+       | expr:a MULTP expr:b  {: RESULT = a.intValue() * b.intValue(); :}
+       | expr:a DIVIS expr:b  {: RESULT = a.intValue() / b.intValue(); :}
+       | expr:a RESTO expr:b  {: RESULT = a.intValue() % b.intValue(); :}
+       | expr:a POTEN expr:b  {: 
+           RESULT = new Integer(
+                      (int) Math.pow(
+                        a.intValue(), 
+                        b.intValue()
+                      )
+                    );
+         :}         
+       | PARENTESQ expr:a PARENTDIR     {: RESULT = a.intValue(); :}
+       | INTEIRO:a                      {: RESULT = a.intValue(); :}
+       ;
+
+/*
+Usar %prec:
+  É importante quando um mesmo token tem dois significados 
+  diferentes (como o - unário e binário).
+  Evita conflitos de precedência.
+  Garante a construção correta da árvore sintática e a avaliação da expressão.
+
+=> Usar %prec MENOSUNARIO para informar:
+   "Essa regra tem a precedência do token MENOSUNARIO, 
+    que foi declarado separadamente na seção de precedência".
+*/

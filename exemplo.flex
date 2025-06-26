@@ -1,21 +1,43 @@
-// Analisador Léxico para a linguagem DO
+/* Definição: seção para código do usuário. */
+
 import java_cup.runtime.Symbol;
+
 %%
+
+/* Opções e Declarações: seção para diretivas e macros. */
+
+// Diretivas:
 %cup
-%class ExemploLexer
-%line %column
+%unicode
+%line
+%column
+%class MeuScanner
+
+// Macros:
+digito = [0-9]
+inteiro = {digito}+
+
 %%
-"do"            { return new Symbol(sym.DO); }
-"out"           { return new Symbol(sym.OUT); }
-"["             { return new Symbol(sym.COLCH_ESQ); }
-"]"             { return new Symbol(sym.COLCH_DIR); }
-";"             { return new Symbol(sym.PTVIRG); }
-"="             { return new Symbol(sym.IGUAL); }
-"<"             { return new Symbol(sym.MENOR); }
-"++"            { return new Symbol(sym.MAIS_MAIS); }
-"("             { return new Symbol(sym.PARENT_ESQ); }
-")"             { return new Symbol(sym.PARENT_DIR); }
-[a-zA-Z_][a-zA-Z0-9_]* { return new Symbol(sym.ID, yytext()); }
-[0-9]+                { return new Symbol(sym.INTEIRO, Integer.valueOf(yytext())); }
-[ \t\r\n]+            { /* Ignora */ }
-.                     { System.err.println("Caractere inválido: " + yytext()); }
+
+/* Regras e Ações Associadas: seção de instruções para o analisador léxico. */
+
+{inteiro} {
+            Integer numero = Integer.valueOf(yytext());
+            return new Symbol(sym.INTEIRO, yyline, yycolumn, numero);
+          }
+"+"       { return new Symbol(sym.MAIS); }
+"-"       { return new Symbol(sym.MENOS); }
+"*"       { return new Symbol(sym.MULTP); }
+"/"       { return new Symbol(sym.DIVIS); }
+"%"       { return new Symbol(sym.RESTO); }
+"^"       { return new Symbol(sym.POTEN); }
+"("       { return new Symbol(sym.PARENTESQ); }
+")"       { return new Symbol(sym.PARENTDIR); }
+";"       { return new Symbol(sym.PTVIRG); }
+\n        { /* Ignora nova linha. */ }
+[ \t\r]+  { /* Ignora espaços. */ }
+.         { System.err.println("\n Caractere inválido: " + yytext() +
+                               "\n Linha: " + yyline +
+                               "\n Coluna: " + yycolumn + "\n"); 
+            return null; 
+          }
